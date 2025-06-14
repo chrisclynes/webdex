@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState } from 'react';
 // Context provides a way to pass data through the component tree without having to pass props down manually at every level.
 const ResultContext = createContext();
 
-const baseUrl = 'https://google-search3.p.rapidapi.com/api/v1';
+const baseUrl = 'https://google-search72.p.rapidapi.com';
 
 //note all react components have children props, this allows use to wrap this around any components to send props down through
 export const ResultContextProvider = ({ children }) => {
@@ -15,26 +15,30 @@ export const ResultContextProvider = ({ children }) => {
     const getResults = async (type) => {
         setIsLoading(true);
         
-        const response = await fetch(`${baseUrl}${type}`, {
+        let url = `${baseUrl}${type}`;
+        
+        // Handle image search specifically
+        if (type.includes('/image')) {
+            url = `${baseUrl}/imagesearch?q=${searchTerm}&gl=us&lr=lang_en&num=10&start=0`;
+        }
+        
+        const response = await fetch(url, {
             method: 'GET',
             headers: {
                 'X-User-Agent': 'desktop',
                 'X-Proxy-Location': 'US',
-                'X-RapidAPI-Host': 'google-search3.p.rapidapi.com',
+                'X-RapidAPI-Host': 'google-search72.p.rapidapi.com',
                 'X-RapidAPI-Key': process.env.REACT_APP_RAPIDAPI_GOOGLE_API_KEY
             }
         });
         const data = await response.json();
 
-        //since results.entries causes an issue being that entries is a built-in function, we have to modify how we get the results
-        if(type.includes('/news')) {
-            setResults([data.entries]);
-        }else if(type.includes('/image')) {
-            setResults([data.image_results]);
-        }else {
-            setResults([data.results]);
+        if (data.status === 'success') {
+            setResults([data]);
+        } else {
+            setResults([]);
         }
-        console.log(data.results)
+        
         setIsLoading(false);
     }
     return (
